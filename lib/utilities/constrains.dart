@@ -1,22 +1,9 @@
 import 'package:flutter/material.dart';
 Color green = const Color(0xff00FF15);
 
-const hundred = TextStyle(
+const numbers = TextStyle(
   fontFamily: 'Jua',
   fontSize: 15,
-  color: Color(0xff00FF15)
-);
-
-const fifty = TextStyle(
-  fontFamily: 'Jua',
-  fontSize: 15,
-  color: Color(0xffFFFB00)
-);
-
-const zero = TextStyle(
-  fontFamily: 'Jua',
-  fontSize: 15,
-  color: Color(0xffFF0000)
 );
 
 const text1 = TextStyle(

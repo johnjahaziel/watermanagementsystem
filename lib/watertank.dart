@@ -1,4 +1,4 @@
-// ignore_for_file: non_constant_identifier_names
+// ignore_for_file: non_constant_identifier_names, unrelated_type_equality_checks
 
 import 'dart:convert';
 
@@ -17,6 +17,13 @@ class _WatertankState extends State<Watertank> {
   String motor_status = 'Loading';
   Color motorTextColor = Colors.white;
   String date = "Loading...";
+  String tank1Percentage = '0%';
+  String tank2Percentage = '0%';
+  String sumpPercentage = '0%';
+  Color tank1Color = Colors.white;
+  Color tank2Color = Colors.white;
+  Color sumpColor = Colors.white;
+
 
   @override
   void initState() {
@@ -25,7 +32,8 @@ class _WatertankState extends State<Watertank> {
   }
 
   Future<void> fetchDataFromApi() async {
-    const String apiUrl = "http://104.237.9.130/Test_Grace/temp.php";
+    const String apiUrl = "http://104.237.9.130/Test_Grace/input_oht_sump.php";
+    const String apiUrltank2 = "http://104.237.9.130/Test_Grace/input_oht_right.php";
     try {
       final response = await http.get(Uri.parse(apiUrl));
 
@@ -35,7 +43,38 @@ class _WatertankState extends State<Watertank> {
         setState(() {
           date = data['date'];
           motor_status = data['m_status'] == 1 ? 'ON' : 'OFF';
-          motorTextColor = motor_status == 'ON' ? const Color(0xff00FF15) :const Color(0xffFF0000);
+          motorTextColor = motor_status == 'ON' ? const Color(0xff00FF15) : const Color(0xffFF0000);
+
+          int tank1Level = data['tank1_level1'] + data['tank1_level2'];
+          tank1Percentage = tank1Level == 0
+              ? '100%'
+              : tank1Level == 1
+                  ? '50%'
+                  : '0%';
+          
+          if(tank1Level == 0) {
+            tank1Color = const Color(0xff00FF15);
+          } else if (tank1Level == 1) {
+            tank1Color = const Color(0xffFFFB00);
+          } else {
+            tank1Color = const Color(0xffFF0000);
+          }
+
+          int sumpLevel = data['sump_level1'] + data['sump_level2'];
+          sumpPercentage = sumpLevel == 0
+              ? '100%'
+              : sumpLevel == 1
+                  ? '50%'
+                  : '0%';
+
+          if(sumpLevel == 0) {
+            sumpColor = const Color(0xff00FF15);
+          } else if (sumpLevel == 1) {
+            sumpColor = const Color(0xffFFFB00);
+          } else {
+            sumpColor = const Color(0xffFF0000);
+          }
+
         });
       } else {
         setState(() {
@@ -46,6 +85,54 @@ class _WatertankState extends State<Watertank> {
       setState(() {
         date = "Error fetching data";
       });
+    }
+
+    try {
+      final response = await http.get(Uri.parse(apiUrltank2));
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+
+        setState(() {
+          date = data['date'];
+
+          int tank2Level = data['tank1_level1'] + data['tank1_level2'];
+          tank2Percentage = tank2Level == 0
+              ? '100%'
+              : tank2Level == 1
+                  ? '50%'
+                  : '0%';
+
+          if(tank2Level == 0) {
+            tank2Color = const Color(0xff00FF15);
+          } else if (tank2Level == 1) {
+            tank2Color = const Color(0xffFFFB00);
+          } else {
+            tank2Color = const Color(0xffFF0000);
+          }
+
+        });
+      } else {
+        setState(() {
+          date = "Error: ${response.statusCode}";
+        });
+      }
+    } catch (e) {
+      setState(() {
+        date = "Error fetching data";
+      });
+    }
+  }
+
+  String getWaveGif(String percentage) {
+    switch (percentage) {
+      case '100%':
+        return 'images/wave_100.gif';
+      case '50%':
+        return 'images/wave_50.gif';
+      case '0%':
+      default:
+        return 'images/wave_0.gif';
     }
   }
 
@@ -164,7 +251,12 @@ class _WatertankState extends State<Watertank> {
                     ),
                     height: 25,
                     width: 50,
-                    child: const Center(child: Text('100%',style:hundred,)),
+                    child: Center(
+                      child: Text(
+                        tank1Percentage,
+                        style:numbers.copyWith(color: tank1Color),
+                      )
+                    ),
                   ),
                   Container(
                     decoration: const BoxDecoration(
@@ -173,17 +265,24 @@ class _WatertankState extends State<Watertank> {
                     ),
                     height: 25,
                     width: 50,
-                    child: const Center(child: Text('50%',style:fifty,)),
+                    child: Center(
+                      child: Text(
+                        tank2Percentage,
+                        style:numbers.copyWith(color: tank2Color),
+                      )
+                    ),
                   )
                 ],
               ),
             ),
             Padding(
-              padding: const EdgeInsets.only(left: 20,right: 40,top: 15),
+              padding: const EdgeInsets.only(left: 20,right: 30,top: 15),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Stack(
                         children: [
@@ -205,7 +304,7 @@ class _WatertankState extends State<Watertank> {
                                   width: 6,
                                 ),
                                 const SizedBox(
-                                  height: 60,
+                                  height: 55,
                                 ),
                                 Container(
                                   color: const Color(0xffFFFB00),
@@ -213,7 +312,7 @@ class _WatertankState extends State<Watertank> {
                                   width: 6,
                                 ),
                                 const SizedBox(
-                                  height: 60,
+                                  height: 55,
                                 ),
                                 Container(
                                   color: const Color(0xffFF0000),
@@ -228,37 +327,49 @@ class _WatertankState extends State<Watertank> {
                       const SizedBox(
                         width: 12,
                       ),
-                      Container(
-                        decoration: const BoxDecoration(
-                          borderRadius: BorderRadius.only(
-                            bottomLeft: Radius.circular(20),
-                            bottomRight: Radius.circular(20)
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            decoration: const BoxDecoration(
+                              borderRadius: BorderRadius.only(
+                                bottomLeft: Radius.circular(20),
+                                bottomRight: Radius.circular(20)
+                              ),
+                                color: Colors.white,
+                                boxShadow: [
+                                  BoxShadow(
+                                    offset: Offset(0, 3),
+                                    blurRadius: 5,
+                                    color: Colors.grey
+                                  )
+                                ]
+                              ),
+                            height: 170,
+                            width: 150,
+                            child: ClipRRect(
+                              borderRadius: const BorderRadius.only(
+                                bottomLeft: Radius.circular(20),
+                                bottomRight: Radius.circular(20),
+                              ),
+                              child: Image.asset(
+                                getWaveGif(tank1Percentage),
+                                fit: BoxFit.cover,
+                              ),
+                            ),
                           ),
-                            color: Colors.white,
-                            boxShadow: [
-                              BoxShadow(
-                                offset: Offset(0, 3),
-                                blurRadius: 5,
-                                color: Colors.grey
-                              )
-                            ]
+                          const SizedBox(
+                            height: 15,
                           ),
-                        height: 170,
-                        width: 150,
-                        child: ClipRRect(
-                          borderRadius: const BorderRadius.only(
-                            bottomLeft: Radius.circular(20),
-                            bottomRight: Radius.circular(20),
-                          ),
-                          child: Image.asset(
-                            'images/wave_gif.gif',
-                            fit: BoxFit.cover,
-                          ),
-                        ),
+                          Text(date,style: text5,)
+                        ],
                       ),
                     ],
                   ),
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Stack(
                         children: [
@@ -280,7 +391,7 @@ class _WatertankState extends State<Watertank> {
                                   width: 6,
                                 ),
                                 const SizedBox(
-                                  height: 60,
+                                  height: 55,
                                 ),
                                 Container(
                                   color: const Color(0xffFFFB00),
@@ -288,7 +399,7 @@ class _WatertankState extends State<Watertank> {
                                   width: 6,
                                 ),
                                 const SizedBox(
-                                  height: 60,
+                                  height: 55,
                                 ),
                                 Container(
                                   color: const Color(0xffFF0000),
@@ -303,46 +414,46 @@ class _WatertankState extends State<Watertank> {
                       const SizedBox(
                         width: 12,
                       ),
-                      Container(
-                        decoration: const BoxDecoration(
-                          borderRadius: BorderRadius.only(
-                            bottomLeft: Radius.circular(20),
-                            bottomRight: Radius.circular(20)
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            decoration: const BoxDecoration(
+                              borderRadius: BorderRadius.only(
+                                bottomLeft: Radius.circular(20),
+                                bottomRight: Radius.circular(20)
+                              ),
+                                color: Colors.white,
+                                boxShadow: [
+                                  BoxShadow(
+                                    offset: Offset(0, 3),
+                                    blurRadius: 5,
+                                    color: Colors.grey
+                                  )
+                                ]
+                              ),
+                            height: 170,
+                            width: 150,
+                            child: ClipRRect(
+                              borderRadius: const BorderRadius.only(
+                                bottomLeft: Radius.circular(20),
+                                bottomRight: Radius.circular(20),
+                              ),
+                              child: Image.asset(
+                                getWaveGif(tank2Percentage),
+                                fit: BoxFit.cover,
+                              ),
+                            ),
                           ),
-                            color: Colors.white,
-                            boxShadow: [
-                              BoxShadow(
-                                offset: Offset(0, 3),
-                                blurRadius: 5,
-                                color: Colors.grey
-                              )
-                            ]
+                          const SizedBox(
+                            height: 15,
                           ),
-                        height: 170,
-                        width: 150,
-                        child: ClipRRect(
-                          borderRadius: const BorderRadius.only(
-                            bottomLeft: Radius.circular(20),
-                            bottomRight: Radius.circular(20),
-                          ),
-                          child: Image.asset(
-                            'images/wave_gif.gif',
-                            fit: BoxFit.cover,
-                          ),
-                        ),
+                          Text(date,style: text5,)
+                        ],
                       ),
                     ],
                   ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(left: 40,right: 40,top: 15),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(date,style: text5,),
-                  Text(date,style: text5,)
                 ],
               ),
             ),
@@ -365,7 +476,12 @@ class _WatertankState extends State<Watertank> {
                       ),
                       height: 25,
                       width: 50,
-                      child: const Center(child: Text('0%',style:zero,)),
+                      child: Center(
+                        child: Text(
+                          sumpPercentage,
+                          style:numbers.copyWith(color: sumpColor),
+                        )
+                      ),
                     ),
                   ),
                   const SizedBox(
@@ -373,6 +489,7 @@ class _WatertankState extends State<Watertank> {
                   ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Stack(
                         children: [
@@ -394,7 +511,7 @@ class _WatertankState extends State<Watertank> {
                                   width: 6,
                                 ),
                                 const SizedBox(
-                                  height: 60,
+                                  height: 55,
                                 ),
                                 Container(
                                   color: const Color(0xffFFFB00),
@@ -402,7 +519,7 @@ class _WatertankState extends State<Watertank> {
                                   width: 6,
                                 ),
                                 const SizedBox(
-                                  height: 60,
+                                  height: 55,
                                 ),
                                 Container(
                                   color: const Color(0xffFF0000),
@@ -417,39 +534,45 @@ class _WatertankState extends State<Watertank> {
                       const SizedBox(
                         width: 12,
                       ),
-                      Container(
-                        decoration: const BoxDecoration(
-                          borderRadius: BorderRadius.only(
-                            bottomLeft: Radius.circular(20),
-                            bottomRight: Radius.circular(20)
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            decoration: const BoxDecoration(
+                              borderRadius: BorderRadius.only(
+                                bottomLeft: Radius.circular(20),
+                                bottomRight: Radius.circular(20)
+                              ),
+                                color: Colors.white,
+                                boxShadow: [
+                                  BoxShadow(
+                                    offset: Offset(0, 3),
+                                    blurRadius: 5,
+                                    color: Colors.grey
+                                  )
+                                ]
+                              ),
+                            height: 170,
+                            width: 150,
+                            child: ClipRRect(
+                              borderRadius: const BorderRadius.only(
+                                bottomLeft: Radius.circular(20),
+                                bottomRight: Radius.circular(20),
+                              ),
+                              child: Image.asset(
+                                getWaveGif(sumpPercentage),
+                                fit: BoxFit.cover,
+                              ),
+                            ),
                           ),
-                            color: Colors.white,
-                            boxShadow: [
-                              BoxShadow(
-                                offset: Offset(0, 3),
-                                blurRadius: 5,
-                                color: Colors.grey
-                              )
-                            ]
+                          const SizedBox(
+                            height: 15,
                           ),
-                        height: 170,
-                        width: 150,
-                        child: ClipRRect(
-                          borderRadius: const BorderRadius.only(
-                            bottomLeft: Radius.circular(20),
-                            bottomRight: Radius.circular(20),
-                          ),
-                          child: Image.asset(
-                            'images/wave_gif.gif',
-                            fit: BoxFit.cover,
-                          ),
-                        ),
+                          Text(date,style: text5,)
+                        ],
                       ),
                     ],
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 15,left: 10),
-                    child: Text(date,style: text5,),
                   ),
                   const SizedBox(
                     height: 20,
