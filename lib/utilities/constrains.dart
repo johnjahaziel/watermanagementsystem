@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+
 Color green = const Color(0xff00FF15);
+Color yellow = const Color(0xffFFFB00);
+Color red = const Color(0xffFF0000);
+Color grey = const Color(0xff444444);
 
 const numbers = TextStyle(
   fontFamily: 'Jua',
