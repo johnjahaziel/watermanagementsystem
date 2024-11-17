@@ -10,8 +10,12 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const  MaterialApp(
-      home: Watertank(),
+    return MaterialApp(
+      initialRoute: '/',
+      routes: {
+        '/': (context) => const Watertank(),
+        Watertank.id : (context) => const Watertank()
+      },
     );
   }
 }

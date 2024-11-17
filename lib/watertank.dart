@@ -1,4 +1,4 @@
-// ignore_for_file: non_constant_identifier_names, unrelated_type_equality_checks
+// ignore_for_file: non_constant_identifier_names, unrelated_type_equality_checks, use_build_context_synchronously
 
 import 'dart:convert';
 
@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:watertank/utilities/constrains.dart';
 
 class Watertank extends StatefulWidget {
+  static String id = "Watertank";
   const Watertank({super.key});
 
   @override
@@ -14,6 +15,7 @@ class Watertank extends StatefulWidget {
 }
 
 class _WatertankState extends State<Watertank> {
+  bool isLoading = false;
   String motor_status = 'Loading';
   Color motorTextColor = Colors.white;
   String date = "Loading...";
@@ -24,9 +26,10 @@ class _WatertankState extends State<Watertank> {
   Color tank1Color = Colors.white;
   Color tank2Color = Colors.white;
   Color sumpColor = Colors.white;
-  Color tank1andsumpstatus = Colors.white;
-  Color tank2status = Colors.white;
-
+  Color tank1andsumpstatus = yellow;
+  Color tank2status = yellow;
+  DateTime currentdate = DateTime.now();
+  
   @override
   void initState() {
     super.initState();
@@ -46,6 +49,7 @@ class _WatertankState extends State<Watertank> {
           date = data['date'];
           motor_status = data['m_status'] == 1 ? 'ON' : 'OFF';
           motorTextColor = motor_status == 'ON' ? green : red;
+          DateTime apidate = DateTime.parse(date);
 
           int tank1Level = data['tank1_level1'] + data['tank1_level2'];
           tank1Percentage = tank1Level == 0
@@ -60,6 +64,16 @@ class _WatertankState extends State<Watertank> {
             tank1Color = yellow;
           } else {
             tank1Color = red;
+          }
+
+          if (apidate.year == currentdate.year &&
+              apidate.month == currentdate.month &&
+              apidate.day == currentdate.day &&
+              apidate.hour == currentdate.hour &&
+              apidate.minute == currentdate.minute) {
+            tank1andsumpstatus = green;
+          } else {
+            tank1andsumpstatus = red;
           }
 
           int sumpLevel = data['sump_level1'] + data['sump_level2'];
@@ -97,6 +111,7 @@ class _WatertankState extends State<Watertank> {
 
         setState(() {
           datetank2 = data['date'];
+          DateTime apidate = DateTime.parse(datetank2);
 
           int tank2Level = data['tank1_level1'] + data['tank1_level2'];
           tank2Percentage = tank2Level == 0
@@ -111,6 +126,16 @@ class _WatertankState extends State<Watertank> {
             tank2Color = yellow;
           } else {
             tank2Color = red;
+          }
+
+          if (apidate.year == currentdate.year &&
+              apidate.month == currentdate.month &&
+              apidate.day == currentdate.day &&
+              apidate.hour == currentdate.hour &&
+              apidate.minute == currentdate.minute) {
+            tank2status = green;
+          } else {
+            tank2status = red;
           }
 
         });
@@ -138,509 +163,557 @@ class _WatertankState extends State<Watertank> {
     }
   }
 
+  void reload() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    await Future.delayed(const Duration(seconds: 1));
+    Navigator.pushNamed(context, Watertank.id);
+    
+    setState(() {
+      isLoading = false;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SingleChildScrollView(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Stack(
-              children: [
-                SizedBox(
-                  height: 180,
-                  child: Image(
-                    image: AssetImage('images/waterdripping.png'),
-                    fit: BoxFit.cover,
-                  ),
-                ),
-                Padding(
-                  padding: EdgeInsets.only(top: 10),
-                  child: Center(
-                    child: Text(
-                      'WATER MANAGEMENT SYSTEM',
-                      style: text1,
-                    ),
-                  ),
-                )
-              ]
-            ),
-            Row(
+    return SafeArea(
+      child: Scaffold(
+        body: isLoading
+                ? const Center(child: CircularProgressIndicator())
+              : SingleChildScrollView(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
               crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Padding(
-                  padding: const EdgeInsets.only(left: 25,top: 10),
-                  child: Stack(
-                    children: [
-                      Container(
-                        decoration: const BoxDecoration(
-                          borderRadius: BorderRadius.all(Radius.circular(25)),
-                          color: Color(0xffEDEDED),
-                          boxShadow: [
-                            BoxShadow(
-                              offset: Offset(0, 3),
-                              blurRadius: 5,
-                              color: Colors.grey
-                            )
-                          ]
-                        ),
-                        height: 140,
-                        width: 190,
+                Stack(
+                  children: [
+                    const SizedBox(
+                      height: 180,
+                      child: Image(
+                        image: AssetImage('images/waterdripping.png'),
+                        fit: BoxFit.cover,
                       ),
-                      Column(
-                        children: [
-                          const Padding(
-                            padding: EdgeInsets.only(left: 20,top: 15),
-                            child: Text('Motor',style: text3,),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.only(left: 20,top: 10),
-                            child: Container(
-                              decoration: BoxDecoration(
-                                borderRadius: const BorderRadius.all(Radius.circular(12)),
-                                color: grey,
-                              ),
-                              height: 50,
-                              width: 150,
-                              child:  Center(
-                                child: Text(
-                                  motor_status,
-                                  style: text2.copyWith(color: motorTextColor)
-                                )
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                const Image(
-                  image: AssetImage('images/watermotor.png'),
-                  height: 176,
-                  width: 169,
-                )
-              ],
-            ),
-            const SizedBox(
-              height: 10,
-            ),
-            const Divider(
-              height: 2,
-              color: Colors.grey,
-            ),
-            Padding(
-              padding: const EdgeInsets.only(left: 20,right: 30,top: 15),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Stack(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(top: 30,left: 20),
-                        child: CircleAvatar(
-                          backgroundColor: red,
-                          radius: 7,
+                    ),
+                    const Padding(
+                      padding: EdgeInsets.only(top: 10),
+                      child: Center(
+                        child: Text(
+                          'WATER MANAGEMENT SYSTEM',
+                          style: text1,
                         ),
                       ),
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Padding(
-                            padding: EdgeInsets.only(left: 65),
-                            child: Text('TANK 1',style: text4,),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.only(left: 70),
-                            child: Container(
-                              decoration: BoxDecoration(
-                                borderRadius: const BorderRadius.all(Radius.circular(5)),
-                                color: grey,
-                              ),
-                              height: 25,
-                              width: 50,
-                              child: Center(
-                                child: Text(
-                                  tank1Percentage,
-                                  style:numbers.copyWith(color: tank1Color),
-                                )
-                              ),
-                            ),
-                          ),
-                          const SizedBox(
-                            height: 15,
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Stack(
-                                children: [
-                                  Container(
-                                    decoration: BoxDecoration(
-                                      borderRadius: const BorderRadius.all(Radius.circular(15)),
-                                      color: grey
-                                    ),
-                                    height: 170,
-                                    width: 8  ,
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.only(top: 12,left: 2),
-                                    child: Column(
-                                      children: [
-                                        Container(
-                                          color: green,
-                                          height: 5,
-                                          width: 6,
-                                        ),
-                                        const SizedBox(
-                                          height: 55,
-                                        ),
-                                        Container(
-                                          color: yellow,
-                                          height: 5,
-                                          width: 6,
-                                        ),
-                                        const SizedBox(
-                                          height: 55,
-                                        ),
-                                        Container(
-                                          color: red,
-                                          height: 5,
-                                          width: 6,
-                                        ),
-                                      ],
-                                    ),
-                                  )
-                                ],
-                              ),
-                              const SizedBox(
-                                width: 12,
-                              ),
-                              Column(
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Container(
-                                    decoration: const BoxDecoration(
-                                      borderRadius: BorderRadius.only(
-                                        bottomLeft: Radius.circular(20),
-                                        bottomRight: Radius.circular(20)
-                                      ),
-                                        color: Colors.white,
-                                        boxShadow: [
-                                          BoxShadow(
-                                            offset: Offset(0, 3),
-                                            blurRadius: 5,
-                                            color: Colors.grey
-                                          )
-                                        ]
-                                      ),
-                                    height: 170,
-                                    width: 150,
-                                    child: ClipRRect(
-                                      borderRadius: const BorderRadius.only(
-                                        bottomLeft: Radius.circular(20),
-                                        bottomRight: Radius.circular(20),
-                                      ),
-                                      child: Image.asset(
-                                        getWaveGif(tank1Percentage),
-                                        fit: BoxFit.cover,
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(
-                                    height: 15,
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.only(left: 10),
-                                    child: Text(date,style: text5,),
-                                  )
-                                ],
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  Stack(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(top: 30,left: 20),
-                        child: CircleAvatar(
-                          backgroundColor: green,
-                          radius: 7,
-                        ),
-                      ),
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Padding(
-                            padding: EdgeInsets.only(left: 65),
-                            child: Text('TANK 2',style: text4,),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.only(left: 70),
-                            child: Container(
-                              decoration: BoxDecoration(
-                                borderRadius: const BorderRadius.all(Radius.circular(5)),
-                                color: grey,
-                              ),
-                              height: 25,
-                              width: 50,
-                              child: Center(
-                                child: Text(
-                                  tank2Percentage,
-                                  style:numbers.copyWith(color: tank2Color),
-                                )
-                              ),
-                            ),
-                          ),
-                          const SizedBox(
-                            height: 15,
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Stack(
-                                children: [
-                                  Container(
-                                    decoration: BoxDecoration(
-                                      borderRadius: const BorderRadius.all(Radius.circular(15)),
-                                      color: grey
-                                    ),
-                                    height: 170,
-                                    width: 8  ,
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.only(top: 12,left: 2),
-                                    child: Column(
-                                      children: [
-                                        Container(
-                                          color: green,
-                                          height: 5,
-                                          width: 6,
-                                        ),
-                                        const SizedBox(
-                                          height: 55,
-                                        ),
-                                        Container(
-                                          color: yellow,
-                                          height: 5,
-                                          width: 6,
-                                        ),
-                                        const SizedBox(
-                                          height: 55,
-                                        ),
-                                        Container(
-                                          color: red,
-                                          height: 5,
-                                          width: 6,
-                                        ),
-                                      ],
-                                    ),
-                                  )
-                                ],
-                              ),
-                              const SizedBox(
-                                width: 12,
-                              ),
-                              Column(
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Container(
-                                    decoration: const BoxDecoration(
-                                      borderRadius: BorderRadius.only(
-                                        bottomLeft: Radius.circular(20),
-                                        bottomRight: Radius.circular(20)
-                                      ),
-                                        color: Colors.white,
-                                        boxShadow: [
-                                          BoxShadow(
-                                            offset: Offset(0, 3),
-                                            blurRadius: 5,
-                                            color: Colors.grey
-                                          )
-                                        ]
-                                      ),
-                                    height: 170,
-                                    width: 150,
-                                    child: ClipRRect(
-                                      borderRadius: const BorderRadius.only(
-                                        bottomLeft: Radius.circular(20),
-                                        bottomRight: Radius.circular(20),
-                                      ),
-                                      child: Image.asset(
-                                        getWaveGif(tank2Percentage),
-                                        fit: BoxFit.cover,
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(
-                                    height: 15,
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.only(left: 10),
-                                    child: Text(datetank2,style: text5,),
-                                  )
-                                ],
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(left: 125,top: 20),
-              child: Stack(
-                children: [
-                  Padding(
-                        padding: const EdgeInsets.only(top: 30,left: 20),
-                        child: CircleAvatar(
-                          backgroundColor: red,
-                          radius: 7,
-                        ),
-                      ),
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Padding(
-                        padding: EdgeInsets.only(left: 65),
-                        child: Text('SUMP 1',style: text4,),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(left: 70),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            borderRadius: const BorderRadius.all(Radius.circular(5)),
-                            color: grey,
-                          ),
-                          height: 25,
-                          width: 50,
-                          child: Center(
-                            child: Text(
-                              sumpPercentage,
-                              style:numbers.copyWith(color: sumpColor),
-                            )
-                          ),
-                        ),
-                      ),
-                      const SizedBox(
-                        height: 15,
-                      ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Stack(
-                            children: [
-                              Container(
-                                decoration: BoxDecoration(
-                                  borderRadius: const BorderRadius.all(Radius.circular(15)),
-                                  color: grey
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 115,right: 22),
+                      child: Align(
+                        alignment: Alignment.topRight,
+                        child: GestureDetector(
+                          onTap: () {
+                            reload();
+                          },
+                          child: Container(
+                            decoration: const BoxDecoration(
+                              borderRadius: BorderRadius.all(Radius.circular(50)),
+                              boxShadow: [
+                                BoxShadow(
+                                  offset: Offset(0, 3),
+                                  blurRadius: 2,
+                                  color: Colors.grey
                                 ),
-                                height: 170,
-                                width: 8  ,
+                              ],
+                              color: Color.fromARGB(255, 244, 244, 244)
+                            ),
+                            height: 50,
+                            width: 50,
+                            child:  const Icon(
+                              Icons.replay,
+                              color: Colors.black,
+                              size: 35,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ]
+                ),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(left: 25,top: 10),
+                      child: Stack(
+                        children: [
+                          Container(
+                            decoration: const BoxDecoration(
+                              borderRadius: BorderRadius.all(Radius.circular(25)),
+                              color: Color(0xffEDEDED),
+                              boxShadow: [
+                                BoxShadow(
+                                  offset: Offset(0, 3),
+                                  blurRadius: 5,
+                                  color: Colors.grey
+                                )
+                              ]
+                            ),
+                            height: 140,
+                            width: 190,
+                          ),
+                          Column(
+                            children: [
+                              const Padding(
+                                padding: EdgeInsets.only(left: 20,top: 15),
+                                child: Text('Motor',style: text3,),
                               ),
                               Padding(
-                                padding: const EdgeInsets.only(top: 12,left: 2),
-                                child: Column(
-                                  children: [
-                                    Container(
-                                      color: green,
-                                      height: 5,
-                                      width: 6,
-                                    ),
-                                    const SizedBox(
-                                      height: 55,
-                                    ),
-                                    Container(
-                                      color: yellow,
-                                      height: 5,
-                                      width: 6,
-                                    ),
-                                    const SizedBox(
-                                      height: 55,
-                                    ),
-                                    Container(
-                                      color: red,
-                                      height: 5,
-                                      width: 6,
-                                    ),
-                                  ],
+                                padding: const EdgeInsets.only(left: 20,top: 10),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    borderRadius: const BorderRadius.all(Radius.circular(12)),
+                                    color: grey,
+                                  ),
+                                  height: 50,
+                                  width: 150,
+                                  child:  Center(
+                                    child: Text(
+                                      motor_status,
+                                      style: text2.copyWith(color: motorTextColor)
+                                    )
+                                  ),
                                 ),
-                              )
+                              ),
                             ],
                           ),
-                          const SizedBox(
-                            width: 12,
+                        ],
+                      ),
+                    ),
+                    const Image(
+                      image: AssetImage('images/watermotor.png'),
+                      height: 176,
+                      width: 169,
+                    )
+                  ],
+                ),
+                const SizedBox(
+                  height: 10,
+                ),
+                const Divider(
+                  height: 2,
+                  color: Colors.grey,
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 20,right: 30,top: 15),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Stack(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(top: 30,left: 20),
+                            child: CircleAvatar(
+                              backgroundColor: tank1andsumpstatus,
+                              radius: 7,
+                            ),
                           ),
                           Column(
                             mainAxisAlignment: MainAxisAlignment.start,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Container(
-                                decoration: const BoxDecoration(
-                                  borderRadius: BorderRadius.only(
-                                    bottomLeft: Radius.circular(20),
-                                    bottomRight: Radius.circular(20)
+                              const Padding(
+                                padding: EdgeInsets.only(left: 60),
+                                child: Text('TANK 1',style: text4,),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.only(left: 70),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    borderRadius: const BorderRadius.all(Radius.circular(5)),
+                                    color: grey,
                                   ),
-                                    color: Colors.white,
-                                    boxShadow: [
-                                      BoxShadow(
-                                        offset: Offset(0, 3),
-                                        blurRadius: 5,
-                                        color: Colors.grey
-                                      )
-                                    ]
-                                  ),
-                                height: 170,
-                                width: 150,
-                                child: ClipRRect(
-                                  borderRadius: const BorderRadius.only(
-                                    bottomLeft: Radius.circular(20),
-                                    bottomRight: Radius.circular(20),
-                                  ),
-                                  child: Image.asset(
-                                    getWaveGif(sumpPercentage),
-                                    fit: BoxFit.cover,
+                                  height: 25,
+                                  width: 50,
+                                  child: Center(
+                                    child: Text(
+                                      tank1Percentage,
+                                      style:numbers.copyWith(color: tank1Color),
+                                    )
                                   ),
                                 ),
                               ),
                               const SizedBox(
                                 height: 15,
                               ),
-                              Padding(
-                                padding: const EdgeInsets.only(left: 10),
-                                child: Text(date,style: text5,),
-                              )
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Stack(
+                                    children: [
+                                      Container(
+                                        decoration: BoxDecoration(
+                                          borderRadius: const BorderRadius.all(Radius.circular(15)),
+                                          color: grey
+                                        ),
+                                        height: 170,
+                                        width: 8  ,
+                                      ),
+                                      Padding(
+                                        padding: const EdgeInsets.only(top: 12,left: 2),
+                                        child: Column(
+                                          children: [
+                                            Container(
+                                              color: green,
+                                              height: 5,
+                                              width: 6,
+                                            ),
+                                            const SizedBox(
+                                              height: 55,
+                                            ),
+                                            Container(
+                                              color: yellow,
+                                              height: 5,
+                                              width: 6,
+                                            ),
+                                            const SizedBox(
+                                              height: 55,
+                                            ),
+                                            Container(
+                                              color: red,
+                                              height: 5,
+                                              width: 6,
+                                            ),
+                                          ],
+                                        ),
+                                      )
+                                    ],
+                                  ),
+                                  const SizedBox(
+                                    width: 12,
+                                  ),
+                                  Column(
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Container(
+                                        decoration: const BoxDecoration(
+                                          borderRadius: BorderRadius.only(
+                                            bottomLeft: Radius.circular(20),
+                                            bottomRight: Radius.circular(20)
+                                          ),
+                                            color: Colors.white,
+                                            boxShadow: [
+                                              BoxShadow(
+                                                offset: Offset(0, 3),
+                                                blurRadius: 5,
+                                                color: Colors.grey
+                                              )
+                                            ]
+                                          ),
+                                        height: 170,
+                                        width: 150,
+                                        child: ClipRRect(
+                                          borderRadius: const BorderRadius.only(
+                                            bottomLeft: Radius.circular(20),
+                                            bottomRight: Radius.circular(20),
+                                          ),
+                                          child: Image.asset(
+                                            getWaveGif(tank1Percentage),
+                                            fit: BoxFit.cover,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(
+                                        height: 15,
+                                      ),
+                                      Padding(
+                                        padding: const EdgeInsets.only(left: 0),
+                                        child: Text(date,style: text5,),
+                                      )
+                                    ],
+                                  ),
+                                ],
+                              ),
                             ],
                           ),
                         ],
                       ),
-                      const SizedBox(
-                        height: 20,
-                      )
+                      Stack(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(top: 30,left: 20),
+                            child: CircleAvatar(
+                              backgroundColor: tank2status,
+                              radius: 7,
+                            ),
+                          ),
+                          Column(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Padding(
+                                padding: EdgeInsets.only(left: 60),
+                                child: Text('TANK 2',style: text4,),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.only(left: 70),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    borderRadius: const BorderRadius.all(Radius.circular(5)),
+                                    color: grey,
+                                  ),
+                                  height: 25,
+                                  width: 50,
+                                  child: Center(
+                                    child: Text(
+                                      tank2Percentage,
+                                      style:numbers.copyWith(color: tank2Color),
+                                    )
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(
+                                height: 15,
+                              ),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Stack(
+                                    children: [
+                                      Container(
+                                        decoration: BoxDecoration(
+                                          borderRadius: const BorderRadius.all(Radius.circular(15)),
+                                          color: grey
+                                        ),
+                                        height: 170,
+                                        width: 8  ,
+                                      ),
+                                      Padding(
+                                        padding: const EdgeInsets.only(top: 12,left: 2),
+                                        child: Column(
+                                          children: [
+                                            Container(
+                                              color: green,
+                                              height: 5,
+                                              width: 6,
+                                            ),
+                                            const SizedBox(
+                                              height: 55,
+                                            ),
+                                            Container(
+                                              color: yellow,
+                                              height: 5,
+                                              width: 6,
+                                            ),
+                                            const SizedBox(
+                                              height: 55,
+                                            ),
+                                            Container(
+                                              color: red,
+                                              height: 5,
+                                              width: 6,
+                                            ),
+                                          ],
+                                        ),
+                                      )
+                                    ],
+                                  ),
+                                  const SizedBox(
+                                    width: 12,
+                                  ),
+                                  Column(
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Container(
+                                        decoration: const BoxDecoration(
+                                          borderRadius: BorderRadius.only(
+                                            bottomLeft: Radius.circular(20),
+                                            bottomRight: Radius.circular(20)
+                                          ),
+                                            color: Colors.white,
+                                            boxShadow: [
+                                              BoxShadow(
+                                                offset: Offset(0, 3),
+                                                blurRadius: 5,
+                                                color: Colors.grey
+                                              )
+                                            ]
+                                          ),
+                                        height: 170,
+                                        width: 150,
+                                        child: ClipRRect(
+                                          borderRadius: const BorderRadius.only(
+                                            bottomLeft: Radius.circular(20),
+                                            bottomRight: Radius.circular(20),
+                                          ),
+                                          child: Image.asset(
+                                            getWaveGif(tank2Percentage),
+                                            fit: BoxFit.cover,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(
+                                        height: 15,
+                                      ),
+                                      Padding(
+                                        padding: const EdgeInsets.only(left: 0),
+                                        child: Text(datetank2,style: text5,),
+                                      )
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ],
                   ),
-                ],
-              ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 125,top: 20),
+                  child: Stack(
+                    children: [
+                      Padding(
+                            padding: const EdgeInsets.only(top: 30,left: 20),
+                            child: CircleAvatar(
+                              backgroundColor: tank1andsumpstatus,
+                              radius: 7,
+                            ),
+                          ),
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Padding(
+                            padding: EdgeInsets.only(left: 60),
+                            child: Text('SUMP 1',style: text4,),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(left: 70),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                borderRadius: const BorderRadius.all(Radius.circular(5)),
+                                color: grey,
+                              ),
+                              height: 25,
+                              width: 50,
+                              child: Center(
+                                child: Text(
+                                  sumpPercentage,
+                                  style:numbers.copyWith(color: sumpColor),
+                                )
+                              ),
+                            ),
+                          ),
+                          const SizedBox(
+                            height: 15,
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Stack(
+                                children: [
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      borderRadius: const BorderRadius.all(Radius.circular(15)),
+                                      color: grey
+                                    ),
+                                    height: 170,
+                                    width: 8  ,
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 12,left: 2),
+                                    child: Column(
+                                      children: [
+                                        Container(
+                                          color: green,
+                                          height: 5,
+                                          width: 6,
+                                        ),
+                                        const SizedBox(
+                                          height: 55,
+                                        ),
+                                        Container(
+                                          color: yellow,
+                                          height: 5,
+                                          width: 6,
+                                        ),
+                                        const SizedBox(
+                                          height: 55,
+                                        ),
+                                        Container(
+                                          color: red,
+                                          height: 5,
+                                          width: 6,
+                                        ),
+                                      ],
+                                    ),
+                                  )
+                                ],
+                              ),
+                              const SizedBox(
+                                width: 12,
+                              ),
+                              Column(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Container(
+                                    decoration: const BoxDecoration(
+                                      borderRadius: BorderRadius.only(
+                                        bottomLeft: Radius.circular(20),
+                                        bottomRight: Radius.circular(20)
+                                      ),
+                                        color: Colors.white,
+                                        boxShadow: [
+                                          BoxShadow(
+                                            offset: Offset(0, 3),
+                                            blurRadius: 5,
+                                            color: Colors.grey
+                                          )
+                                        ]
+                                      ),
+                                    height: 170,
+                                    width: 150,
+                                    child: ClipRRect(
+                                      borderRadius: const BorderRadius.only(
+                                        bottomLeft: Radius.circular(20),
+                                        bottomRight: Radius.circular(20),
+                                      ),
+                                      child: Image.asset(
+                                        getWaveGif(sumpPercentage),
+                                        fit: BoxFit.cover,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(
+                                    height: 15,
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.only(left: 0),
+                                    child: Text(date,style: text5,),
+                                  )
+                                ],
+                              ),
+                            ],
+                          ),
+                          const SizedBox(
+                            height: 20,
+                          )
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ]
             ),
-          ]
+          ),
         ),
-      ),
     );
   }
 }
